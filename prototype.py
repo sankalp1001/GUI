@@ -9,13 +9,13 @@ from PyQt5.QtCore import QThread, Qt, pyqtSignal,pyqtSlot
 from PyQt5 import QtCore, QtWidgets
 from PyQt5.QtWidgets import QWidget, QLabel, QApplication
 import random
-#from threading import Thread
+from threading import Thread
 import threading
     
 class vidFeed(QThread):
    ImgUpdate = pyqtSignal(QImage)
    def run(self):
-        capture= cv2.VideoCapture(2)
+        capture= cv2.VideoCapture(0)
         while True:
             ret,frame =capture.read()
             if ret:
@@ -26,8 +26,7 @@ class vidFeed(QThread):
                 self.ImgUpdate.emit(out)
 
 
-
-class dispXY():         
+class dispXY(Thread):         
     def genX(): 
         while True:
             x = str(random.randint(1,1000)) 
@@ -88,21 +87,18 @@ class mainWindow(QWidget):
     def setImage(self, image):
         self.CameraWindow.setPixmap(QPixmap.fromImage(image))
     
-    def setXY(self):
-        if (dispXY.genX() or dispXY.genY):
-            self.xcord.setText(dispXY.genX())
-            self.ycord.setText(dispXY.genY())
+    def setXY(self):        
+        self.xcord.setText(dispXY.genX())
+        self.ycord.setText(dispXY.genY())
             #print(x,y)
-            #sleep(1)
+        #sleep(1)
     def initUI(self):
         th =vidFeed(self)
         th.ImgUpdate.connect(self.setImage)
         th.start()
-        th1 = threading.Thread(target=self.setXY())
+        #th1=threading.Thread(target=self.setXY())
         #th1.start()
-        
-
-        
+         
 if __name__ == "__main__":
     app = QtWidgets.QApplication(sys.argv)
     Window = QtWidgets.QMainWindow()
@@ -110,4 +106,3 @@ if __name__ == "__main__":
     ui.uiSetup(Window)
     Window.show()
     app.exec_()  
-    
