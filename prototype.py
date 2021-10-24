@@ -10,10 +10,14 @@ from PyQt5 import QtCore, QtWidgets
 from PyQt5.QtWidgets import QWidget, QLabel, QApplication
 import random
 from threading import Thread
-import threading
+
     
 class vidFeed(QThread):
    ImgUpdate = pyqtSignal(QImage)
+   def __init__(self):      
+        # super(CameraThread,self).__init__()
+        QThread.__init__(self, parent=None)
+
    def run(self):
         capture= cv2.VideoCapture(0)
         while True:
@@ -26,22 +30,28 @@ class vidFeed(QThread):
                 self.ImgUpdate.emit(out)
 
 
-class dispXY(Thread):         
-    def genX(): 
+class dispXY(QThread): 
+
+    speak_x=pyqtSignal(str)
+    speak_y=pyqtSignal(str)
+    speak_z = pyqtSignal(str)
+    def __init__(self):
+        # super(CameraThread,self).__init__()
+        QThread.__init__(self, parent=None)
+
+    def run(self):
         while True:
             x = str(random.randint(1,1000)) 
-            #mainWindow.xcord.setText(x)  
-            sleep(1)
-            return str(x)
-    def genY():
-        while True:    
+            self.speak_x.emit(x)
             y = str(random.randint(1,1000)) 
-            # mainWindow.ycord.setText(y)   
+            self.speak_y.emit(y)  
+            z = str(random.randint(1,1000))
+            self.speak_z.emit(z)
             sleep(1)
-            return str(y)
  
 class mainWindow(QWidget):
- 
+    
+
     def uiSetup(self,Window):
         Window.setObjectName("MainWindow")
         Window.resize(800,640)
@@ -63,13 +73,16 @@ class mainWindow(QWidget):
         self.xcord.move(10,10)
         self.xcord.resize(280,40)
         self.xcord.setReadOnly(True)
-        # self.xcord.setText(str (random.randint(1,100)))
+    
+        self.zcord = QtWidgets.QTextEdit(self.centralwidget)
+        self.zcord.move(10,93)
+        self.zcord.resize(280,40)
+        self.zcord.setReadOnly(True)
     
         self.ycord = QtWidgets.QTextEdit(self.centralwidget)
         self.ycord.move(10,51)
         self.ycord.resize(280,40)
         self.ycord.setReadOnly(True)
-        # self.ycord.setText(str(random.randint(1,100)))
 
         self.button=QtWidgets.QPushButton(self.centralwidget)
         self.button.setGeometry(QtCore.QRect(100, 400, 141, 41))
@@ -79,7 +92,7 @@ class mainWindow(QWidget):
         Window.setCentralWidget(self.centralwidget)  
         self.initUI()
         QtCore.QMetaObject.connectSlotsByName(Window)
-        #self.setXY()
+
     def on_click(self):
         self.textbox.setText("Button Pressed")    
    
@@ -87,17 +100,24 @@ class mainWindow(QWidget):
     def setImage(self, image):
         self.CameraWindow.setPixmap(QPixmap.fromImage(image))
     
-    def setXY(self):        
-        self.xcord.setText(dispXY.genX())
-        self.ycord.setText(dispXY.genY())
-            #print(x,y)
-        #sleep(1)
+    pyqtSlot(str)
+    def setX(self,x):        
+        self.xcord.setText(x)
+    pyqtSlot(str)
+    def setY(self,y):
+        self.ycord.setText(y)
+    pyqtSlot
+    def setZ(self,z):
+        self.zcord.setText(z)
     def initUI(self):
-        th =vidFeed(self)
-        th.ImgUpdate.connect(self.setImage)
-        th.start()
-        #th1=threading.Thread(target=self.setXY())
-        #th1.start()
+        self.th =vidFeed()
+        self.th.ImgUpdate.connect(self.setImage)
+        self.th.start()
+        self.th1=dispXY()
+        self.th1.speak_x.connect(self.setX)
+        self.th1.speak_y.connect(self.setY)
+        self.th1.speak_z.connect(self.setZ)
+        self.th1.start()
          
 if __name__ == "__main__":
     app = QtWidgets.QApplication(sys.argv)
